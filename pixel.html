@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<html lang="en">
+	
+	<head>
+		
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		<title>Image to HTML</title>
+		<style>
+			body {
+				background-color: black;
+				color: white;
+			}
+			
+			.center {
+				text-align: center;
+			}
+			
+			.small {
+				font-size: 0.9em;
+			}
+			
+			#file_input {
+				display: none;
+			}
+			
+			button {
+				border: 1px solid white;
+				background-color: black;
+				color: white;
+			}
+			
+			a {
+				color: white;
+			}
+		</style>
+
+	</head>
+
+	<body>
+		<main class="center">
+			<h1>Image to HTML Converter</h1>
+			<p class="small">Convert an Image to the HTML in your browser</p>
+			<div>
+				<input type="file" accept="image/*" id="file_input">
+				<button id="file_btn">Choose File</button>
+				<p id="file_name"></p>
+				<div>
+					<button id="sub-btn">Submit</button>
+				</div>
+				<p id="result"></p>
+			</div>
+		</main>
+
+		<script>
+			function html_pixel(hex_code) {
+				return `<span style="display:inline-block;width:1px;height:1px;background-color:#${hex_code};"></span>`;
+			}
+			
+			var file_input = document.querySelector("#file_input");
+			
+			var file_button = document.querySelector("#file_btn");
+			
+			var file_name = document.querySelector("#file_name");
+			
+			var submit = document.querySelector("#sub-btn");
+			
+			var result = document.querySelector("#result");
+			
+			file_button.addEventListener("click", () => {
+				file_input.click();
+			});
+			
+			file_input.addEventListener("change", () => {
+				var c_file = file_input.files.item(0);
+				file_name.innerText = `${c_file.name} | ${c_file.size}B`;
+			});
+			
+			submit.addEventListener("click", () => {
+				result.innerHTML = "";
+				var f = file_input.files.item(0);
+				var img = new Image;
+				img.src= URL.createObjectURL(f);
+				var res_str = "<div style='text-align: center;'>";
+				
+				img.addEventListener("load", () => {
+
+					const w = img.width;
+					const h = img.height;
+					
+					var canvas = document.createElement("canvas");
+					const ctx = canvas.getContext("2d");
+					canvas.width = w;
+					canvas.height = h;
+					
+					ctx.drawImage(img, 0, 0);
+					
+					const imageData = ctx.getImageData(0, 0, w, h).data;
+					
+					
+					
+					for (let i = 0; i < imageData.length; i += 4) {
+						var hex_str = [imageData[i],imageData[i+1],imageData[i+2], imageData[i+3]].map((val) => val.toString(16).padStart(2,"0")).join('');
+						res_str += html_pixel(hex_str);
+						if (i !== 0 && (i/4) % w === 0) {
+							res_str += "<br>";
+						}
+					}
+					
+					res_str += "</div>"
+					
+					result.innerHTML = `<a href="${URL.createObjectURL(new Blob([res_str]))}" download="html2image-${Date.now()}.html">Download HTML Image</a>`;
+				});
+			});
+		</script>
+
+  	</body>
+
+</html>
