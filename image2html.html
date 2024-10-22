@@ -55,10 +55,10 @@
 		</main>
 
 		<script>
-			function html_pixel(hex_code) {
+			function html_pixel(hex_code) { //this function is what converts a the hex code of the color of a pixel of an image to HTML
 				return `<span style="display:inline-block;width:1px;height:1px;background-color:#${hex_code};"></span>`;
 			}
-			
+			//"getting" the different HMTL elements in the document
 			var file_input = document.querySelector("#file_input");
 			
 			var file_button = document.querySelector("#file_btn");
@@ -69,49 +69,67 @@
 			
 			var result = document.querySelector("#result");
 			
-			file_button.addEventListener("click", () => {
+			file_button.addEventListener("click", () => { //this part is just for the "fancy" (AKA not the standard <input type=file> file input)
 				file_input.click();
 			});
-			
-			file_input.addEventListener("change", () => {
+
+
+			/*
+   				adding information about the file on screen; in the future I might change it to display the file size in bytes, kilobytes, megabytes, etc. depending on the file size
+   			*/			
+			file_input.addEventListener("change", () => {  
 				var c_file = file_input.files.item(0);
 				file_name.innerText = `${c_file.name} | ${c_file.size}B`;
 			});
 			
-			submit.addEventListener("click", () => {
-				result.innerHTML = "";
-				var f = file_input.files.item(0);
-				var img = new Image;
-				img.src= URL.createObjectURL(f);
+			submit.addEventListener("click", () => { //this is where the "processing" happens
+				result.innerHTML = ""; //output result string
+				var f = file_input.files.item(0); //get the file from the file_input
+				var img = new Image; //create an image
+				img.src= URL.createObjectURL(f); //set image URL to an object url from the input
+
+				/*
+    					start the HTML string by creating a centered div, in the future I might 
+	 				add an option to set the alignment to "center", "right", or "left"
+    				*/
 				var res_str = "<div style='text-align: center;'>";
 				
-				img.addEventListener("load", () => {
+				img.addEventListener("load", () => { //only do this until the image has loaded
 
 					const w = img.width;
 					const h = img.height;
 					
-					var canvas = document.createElement("canvas");
+					var canvas = document.createElement("canvas"); //create a canvas
 					const ctx = canvas.getContext("2d");
 					canvas.width = w;
 					canvas.height = h;
 					
-					ctx.drawImage(img, 0, 0);
+					ctx.drawImage(img, 0, 0); //draw image onto the canvas
 					
-					const imageData = ctx.getImageData(0, 0, w, h).data;
-					
-					
+					const imageData = ctx.getImageData(0, 0, w, h).data; //get the pixel data from the canvas (which has the image)
 					
 					for (let i = 0; i < imageData.length; i += 4) {
+						/*
+      							this makes the color hex string from the pixel data in the following format
+							aabbccdd
+       							this includes the red, green, blue and alpha values
+	    					*/
 						var hex_str = [imageData[i],imageData[i+1],imageData[i+2], imageData[i+3]].map((val) => val.toString(16).padStart(2,"0")).join('');
-						res_str += html_pixel(hex_str);
-						if (i !== 0 && (i/4) % w === 0) {
+						res_str += html_pixel(hex_str); //add it to the result
+						if (i !== 0 && (i/4) % w === 0) { //this adds a line-break tag, so that the image has the correct width
 							res_str += "<br>";
 						}
 					}
 					
-					res_str += "</div>"
+					res_str += "</div>"; //close the div tag
+
+					//creates link to download the HTML file (also cleaner code from before)
+					var dl_link = document.createElement("a");
+					dl_link.href = URL.createObjectURL(new Blob([res_str])); //set link from
+					dl_link.download = `image2html-${Date.now()}.html`;
+					dl_link.innerText = "Download HTML Image";
 					
-					result.innerHTML = `<a href="${URL.createObjectURL(new Blob([res_str]))}" download="image2html-${Date.now()}.html">Download HTML Image</a>`;
+					result.innerHTML = dl_link.outerHTML;
 				});
 			});
 		</script>
